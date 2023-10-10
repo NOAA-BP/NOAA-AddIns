@@ -1,0 +1,14 @@
+{
+    "builtin": "False",
+    "default_enabled": "True",
+    "type": "extension",
+    "rocket_mode_compatible": "False",
+    "name": "NOAA-Script",
+    "description": "Extensions for PyRevit",
+    "author": "Bogdan Popa",
+    "author_profile": "https://github.com/NOAA-BP",
+    "url": "https://github.com/NOAA-BP/NOAA-AddIns.git",
+    "website": "https://github.com/gtalarico/pyrevitplus",
+    "image": "",
+    "dependencies": []
+}
