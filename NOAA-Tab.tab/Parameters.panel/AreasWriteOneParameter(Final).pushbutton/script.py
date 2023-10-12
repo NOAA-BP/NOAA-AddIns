@@ -19,7 +19,7 @@ area_numbers = [area.LookupParameter("Number").AsString() if area.LookupParamete
 selected_area_numbers = forms.SelectFromList.show(area_numbers, title='Select Area', multiselect=True)
 
 # Create a list of selected areas
-selected_areas = [area for area in areas if area.LookupParameter("Name") and area.LookupParameter("Name").AsString() in selected_area_numbers]
+selected_areas = [area for area in areas if area.LookupParameter("Number") and area.LookupParameter("Number").AsString() in selected_area_numbers]
 
 if not selected_areas:
     print("No areas selected or no name parameter found. Exiting script.")
