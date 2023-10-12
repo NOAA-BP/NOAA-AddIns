@@ -5,7 +5,7 @@ __doc__=""""""
 # Import necessary modules
 from Autodesk.Revit.DB import FilteredElementCollector, BuiltInCategory
 from Autodesk.Revit.UI import TaskDialog
-from pyrevit import forms
+from pyrevit import forms, sys
 from pyrevit import revit, DB
 
 # Get the active Revit application and document
@@ -15,11 +15,11 @@ doc = __revit__.ActiveUIDocument.Document
 areas = FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_Areas).ToElements()
 
 # Prompt the user to select areas by name
-area_names = [area.LookupParameter("Name").AsString() if area.LookupParameter("Name") else "" for area in areas]
-selected_area_names = forms.SelectFromList.show(area_names, title='Select Area', multiselect=True)
+area_numbers = [area.LookupParameter("Number").AsString() if area.LookupParameter("Number") else "" for area in areas]
+selected_area_numbers = forms.SelectFromList.show(area_numbers, title='Select Area', multiselect=True)
 
 # Create a list of selected areas
-selected_areas = [area for area in areas if area.LookupParameter("Name") and area.LookupParameter("Name").AsString() in selected_area_names]
+selected_areas = [area for area in areas if area.LookupParameter("Name") and area.LookupParameter("Name").AsString() in selected_area_numbers]
 
 if not selected_areas:
     print("No areas selected or no name parameter found. Exiting script.")
