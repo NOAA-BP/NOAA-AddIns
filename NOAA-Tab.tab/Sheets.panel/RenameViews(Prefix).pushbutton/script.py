@@ -18,7 +18,7 @@ all_views = FilteredElementCollector(doc).OfClass(View).ToElements()
 all_views = [v for v in all_views if not v.IsTemplate and v.Name != "<Project View>"]
 
 # Prompt the user to select views
-views_to_modify = forms.select_views(title='Select Views to Modify', views=all_views)
+views_to_modify = forms.select_views(title='Select Views to Modify', multiple=True)
 
 # Prompt the user for the new prefix
 view_prefix = forms.ask_for_string(default="",
