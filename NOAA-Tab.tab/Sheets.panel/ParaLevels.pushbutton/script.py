@@ -15,7 +15,7 @@ doc = __revit__.ActiveUIDocument.Document
 all_sheets_collector = FilteredElementCollector(doc).OfClass(ViewSheet).ToElements()
 
 # Prompt user to select sheets to modify
-selected_sheets = forms.select_sheets(title='Select Sheets to Modify')
+selected_sheets = forms.select_sheets(title='Select Sheets to Update Level Parameter')
 
 # If user cancels selection, end script
 if not selected_sheets:
@@ -31,16 +31,22 @@ try:
         placed_views = [doc.GetElement(view_id) for view_id in sheet.GetAllPlacedViews()]
         plan_views = [view for view in placed_views if isinstance(view, ViewPlan)]
 
-        # Get the level name from the first plan view (if there are multiple, you'll need additional logic)
+        # Get the level number from the first plan view and format it
         if plan_views:
-            level_name = plan_views[0].GenLevel.Name
-            # Set the 'Level' parameter on the sheet
-            level_param = sheet.LookupParameter('Level')
-            if level_param and not level_param.IsReadOnly:
-                level_param.Set(level_name)
-                print("Updated sheet: {} with Level: {}".format(sheet.SheetNumber, level_name))
+            level = plan_views[0].GenLevel
+            if level:
+                level_number = ''.join(c for c in level.Name if c.isdigit())
+                formatted_level_number = "{:02d}".format(int(level_number))
+                
+                # Set the 'Level' parameter on the sheet
+                level_param = sheet.LookupParameter('Level')
+                if level_param and not level_param.IsReadOnly:
+                    level_param.Set(formatted_level_number)
+                    print("Updated sheet: {} with Level: {}".format(sheet.SheetNumber, formatted_level_number))
+                else:
+                    print("Sheet: {} does not have a 'Level' parameter or it is read-only.".format(sheet.SheetNumber))
             else:
-                print("Sheet: {} does not have a 'Level' parameter or it is read-only.".format(sheet.SheetNumber))
+                print("No associated level found for the plan view on sheet: {}".format(sheet.SheetNumber))
         else:
             print("No plan view found on sheet: {}".format(sheet.SheetNumber))
 
@@ -48,7 +54,6 @@ try:
 except Exception as e:
     print(str(e))
     t.RollBack()
-
 
 
 
