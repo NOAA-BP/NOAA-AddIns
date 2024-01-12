@@ -7,7 +7,7 @@ View Name = Sheet Name( - Level XX)"""
 import clr
 import sys
 from pyrevit import forms
-from Autodesk.Revit.DB import FilteredElementCollector, BuiltInCategory, Transaction, ElementId
+from Autodesk.Revit.DB import FilteredElementCollector, BuiltInCategory, Transaction, ElementId, ViewType
 import Autodesk.Revit.DB as DB
 
 clr.AddReference('RevitAPI')
@@ -17,20 +17,27 @@ app = __revit__.Application
 doc = __revit__.ActiveUIDocument.Document
      
 
+def get_view_category():
+    from System import Enum
+    category_options = [category.ToString() for category in Enum.GetValues(ViewType)]
+    category_name = forms.SelectFromList.show(category_options, title='Select View Category')
+    if not category_name:
+        sys.exit(0)
+    return Enum.Parse(ViewType, category_name)
 
-def get_ceiling_plan_views():
+def get_views_by_type(view_type):
     all_views = FilteredElementCollector(doc).OfClass(View).ToElements()
-    ceiling_views = [v for v in all_views if v.ViewType == ViewType.CeilingPlan]
+    filtered_views = [v for v in all_views if v.ViewType == view_type]
 
     # Get names of selected views from the user
-    selected_view_names = forms.SelectFromList.show([v.Name for v in ceiling_views], title='Select Ceiling Plan Views', multiselect=True)
+    selected_view_names = forms.SelectFromList.show([v.Name for v in filtered_views], title='Select {} Views'.format(view_type), multiselect=True)
 
     if not selected_view_names:
         print("No views selected.")
         return []
 
     # Find and return the View objects corresponding to the selected names
-    return [v for v in ceiling_views if v.Name in selected_view_names]
+    return [v for v in filtered_views if v.Name in selected_view_names]
 
 def prompt_for_view_name_prefix():
     return forms.ask_for_string("Enter view/sheet name prefix (e.g., 'RCP -'):")
@@ -111,9 +118,10 @@ def apply_templates_to_views(selected_views, selected_template):
 def create_sheets_and_place_views(views, title_block_id, start_number_prefix, name_prefix, selected_template):
     apply_templates_to_views(views, selected_template)
 
-    # Extract the prefix from start_number_prefix
-    # Assuming the format 'XX - YY'
-    prefix = start_number_prefix.rsplit('-', 1)[0].strip()
+    # Split the prefix and base number
+    prefix, base_number = start_number_prefix.rsplit('-', 1)
+    prefix = prefix.strip()
+    base_number = base_number.strip()
 
     with Transaction(doc, "Create Sheets and Place Views") as t:
         t.Start()
@@ -122,20 +130,29 @@ def create_sheets_and_place_views(views, title_block_id, start_number_prefix, na
                 level = view.GenLevel
                 if level:
                     level_number = ''.join(c for c in level.Name if c.isdigit())
-                    # new_sheet_number = "{} - {:02d}".format(prefix, int(level_number))
-                    new_sheet_number = "{:02d}".format(int(level_number))
+                    level_number_int = int(level_number)
+
+                    # Format sheet number based on level
+                    if level_number_int < 10:
+                        new_sheet_number = "{} - {}{}".format(prefix, base_number[:-1], level_number)
+                        new_sheet_name = "{} - LEVEL 0{}".format(name_prefix,level_number_int)
+                        new_view_name = "{} - LEVEL 0{}".format(name_prefix,level_number_int)
+                    else:
+                        new_sheet_number = "{} - {}{}".format(prefix, base_number[:-2], level_number)
+                        new_sheet_name = "{} - LEVEL {}".format(name_prefix,level_number_int)
+                        new_view_name = "{} - LEVEL {}".format(name_prefix,level_number_int)
 
                     if not is_sheet_number_in_use(new_sheet_number, doc):
                         sheet = ViewSheet.Create(doc, title_block_id)
-                        sheet.SheetNumber = prefix + " - 1" + new_sheet_number
-                        sheet.Name = name_prefix + ' - '+"LEVEL" + ' ' + new_sheet_number
+                        sheet.SheetNumber = new_sheet_number
+                        sheet.Name = new_sheet_name
 
                         # Define the location to place the view on the sheet
                         sheet_width = sheet.Outline.Max.U - sheet.Outline.Min.U
                         sheet_height = sheet.Outline.Max.V - sheet.Outline.Min.V
                         view_location = XYZ((sheet_width-(102.5/304.8)) / 2, sheet_height / 2, 0)
 
-                        view.Name = name_prefix + ' '+"LEVEL" + ' ' + new_sheet_number
+                        view.Name = new_sheet_name
 
                         # Place view on sheet
                         try:
@@ -143,7 +160,7 @@ def create_sheets_and_place_views(views, title_block_id, start_number_prefix, na
                         except Exception as e:
                             print("Failed to place view on sheet. Error:", e)
                     else:
-                        print("Sheet number",new_sheet_number,"is already in use.")
+                        print("Sheet number", new_sheet_number, "is already in use.")
                 else:
                     print("No associated level found for the plan view.")
             else:
@@ -154,10 +171,14 @@ def create_sheets_and_place_views(views, title_block_id, start_number_prefix, na
 
 
 
+
 if __name__ == "__main__":
+    # Step 0: Select View Type
+    select_plan_view = get_view_category()
+
     # Step 1: Collect Ceiling Plan Views
-    ceiling_plan_views = get_ceiling_plan_views()
-    if not ceiling_plan_views:
+    plan_views = get_views_by_type(select_plan_view)
+    if not plan_views:
         print("No ceiling plan views selected. Exiting...")
         sys.exit()
 
@@ -192,7 +213,7 @@ if __name__ == "__main__":
         sys.exit()
 
     # Step 7: Duplicate Views and Apply Scope Box
-    duplicated_views = duplicate_views_and_apply_scope_box(ceiling_plan_views, selected_scope_box)
+    duplicated_views = duplicate_views_and_apply_scope_box(plan_views, selected_scope_box)
     if not duplicated_views:
         print("Failed to duplicate views. Exiting...")
         sys.exit()
