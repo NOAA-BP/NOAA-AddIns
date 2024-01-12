@@ -1,9 +1,11 @@
 __title__="CreateSheetsForDuplicatedViews"
 __author__="Bogdan Popa"
-__doc__="""Duplicates Views places on Sheets.
-Sheet Name - Prefix - 
+__doc__="""Duplicates Views and creates corresponding Sheets.
+Places one View per corresponding Sheet
 
-View Name = Sheet Name( - Level XX)"""
+Sheet Number:   'XX - YYY' (displays 'XX - YLL')
+Sheet Name:     'Prefix' - LEVEL LL (displays 'RCP' - LEVEL LL)
+View Name:      Sheet Name"""
 
 import clr
 import sys
@@ -51,7 +53,7 @@ def select_scope_box():
 def pick_title_block():
     collector = FilteredElementCollector(doc).OfClass(FamilySymbol).OfCategory(BuiltInCategory.OST_TitleBlocks)
     title_blocks = {tb.FamilyName: tb.Id for tb in collector.ToElements()}
-    selected = forms.SelectFromList.show(title_blocks.keys(), title='Select Titleblock', multiselect=False)
+    selected = forms.SelectFromList.show(title_blocks.keys(), multiselect=False)
     if not selected:
         print("No title block selected.")
         return None
@@ -138,22 +140,29 @@ def create_sheets_and_place_views(views, title_block_id, start_number_prefix, na
                         new_sheet_number = "{} - {}{}".format(prefix, base_number[:-1], level_number)
                         new_sheet_name = "{} - LEVEL 0{}".format(name_prefix,level_number_int)
                         new_view_name = "{} - LEVEL 0{}".format(name_prefix,level_number_int)
+                        formatted_level_number = "0{}".format(level_number_int)
                     else:
                         new_sheet_number = "{} - {}{}".format(prefix, base_number[:-2], level_number)
                         new_sheet_name = "{} - LEVEL {}".format(name_prefix,level_number_int)
                         new_view_name = "{} - LEVEL {}".format(name_prefix,level_number_int)
+                        formatted_level_number = "{}".format(level_number_int)
 
                     if not is_sheet_number_in_use(new_sheet_number, doc):
                         sheet = ViewSheet.Create(doc, title_block_id)
                         sheet.SheetNumber = new_sheet_number
                         sheet.Name = new_sheet_name
 
+                        # Set the 'Level' parameter on the sheet
+                        level_param = sheet.LookupParameter('Level')
+                        if level_param and not level_param.IsReadOnly:
+                            level_param.Set(formatted_level_number)
+
                         # Define the location to place the view on the sheet
                         sheet_width = sheet.Outline.Max.U - sheet.Outline.Min.U
                         sheet_height = sheet.Outline.Max.V - sheet.Outline.Min.V
                         view_location = XYZ((sheet_width-(102.5/304.8)) / 2, sheet_height / 2, 0)
 
-                        view.Name = new_sheet_name
+                        view.Name = new_view_name
 
                         # Place view on sheet
                         try:
