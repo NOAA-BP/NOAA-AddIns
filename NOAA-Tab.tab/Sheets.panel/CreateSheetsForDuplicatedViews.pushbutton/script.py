@@ -1,7 +1,8 @@
 __title__="CreateSheetsForDuplicatedViews"
 __author__="Bogdan Popa"
-__doc__="""Creates a sheet and places renamed views on it following 3x3 matrix
-Sheet Number - Sheet Name
+__doc__="""Duplicates Views places on Sheets.
+Sheet Name - Prefix - 
+
 View Name = Sheet Name( - Level XX)"""
 
 import clr
@@ -50,7 +51,7 @@ def select_scope_box():
 def pick_title_block():
     collector = FilteredElementCollector(doc).OfClass(FamilySymbol).OfCategory(BuiltInCategory.OST_TitleBlocks)
     title_blocks = {tb.FamilyName: tb.Id for tb in collector.ToElements()}
-    selected = forms.SelectFromList.show(title_blocks.keys(), multiselect=False)
+    selected = forms.SelectFromList.show(title_blocks.keys(), title='Select Titleblock', multiselect=False)
     if not selected:
         print("No title block selected.")
         return None
