@@ -111,18 +111,48 @@ def place_dimension(view, family_instance, reference_type, line):
 
 def get_all_dimension_types(doc):
     """Retrieve all dimension types in the document."""
-    return FilteredElementCollector(doc).OfClass(DimensionType)
+    collector = FilteredElementCollector(doc)
+    return collector.OfClass(DimensionType)
 
 def select_dimension_type(doc):
     """Prompt the user to select a dimension type."""
-    dimension_types = get_all_dimension_types(doc)
-    dimension_type_names = {dt.Name: dt for dt in dimension_types}
-    
-    # Prompt the user to select from the list
+    dimension_types_collector = FilteredElementCollector(doc).OfClass(DimensionType)
+    dimension_types = list(dimension_types_collector)
+
+    # Debug: print number of dimension types found
+    print("Number of dimension types found: {}".format(len(dimension_types)))
+
+    # Filter out any items that might not have a 'Name' property and create a dictionary
+    dimension_type_names = {}
+    for dt in dimension_types:
+        try:
+            name_param = dt.get_Parameter(BuiltInParameter.ALL_MODEL_TYPE_NAME)
+            if name_param and name_param.HasValue:
+                name = name_param.AsString()
+                dimension_type_names[name] = dt
+            else:
+                print("Found a dimension type without a name.")
+        except Exception as e:
+            print("Error accessing Name property: {}".format(e))
+
+    # Debug: print dimension type names
+    print("Dimension Type Names: {}".format(list(dimension_type_names.keys())))
+
+    # Ensure there are dimension types to choose from
+    if not dimension_type_names:
+        print('No valid dimension types found.')
+        forms.alert('No valid dimension types found.', exitscript=True)
+
+    # Show selection form
     selected_name = forms.SelectFromList.show(sorted(dimension_type_names.keys()), 
                                               button_name='Select',
                                               title='Select Dimension Type')
-    return dimension_type_names.get(selected_name, None)
+
+    if selected_name is None:
+        print('No dimension type selected.')
+        return None
+
+    return dimension_type_names[selected_name]
 
 
 # Main script
