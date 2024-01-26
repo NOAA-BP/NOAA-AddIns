@@ -202,7 +202,7 @@ for sheet in sheets:
             collector = FilteredElementCollector(doc, view_id).OfClass(FamilyInstance).OfCategory(BuiltInCategory.OST_Furniture).ToElements()
             print("Collected elements in view:{}".format(collector))
             for element in collector:
-                print("Element being processed:{}, of type{}, under name {}".format(element.Id, type(element), element.Name), "Against selected family name:{}".format(selected_family_type.Family.Name))
+                #print("Element being processed:{}, of type{}, under name {}".format(element.Id, type(element), element.Name), "Against selected family name:{}".format(selected_family_type.Family.Name))
                 if element.Name == "PV-WT-01" or element.Name == "72-WARDROBE TYPE 1 (1800)" or element.Name == "PV-WT-02" or element.Name == "72-WARDROBE TYPE 2 (1500)" or element.Name == "PV-WT-03" or element.Name == "72-WARDROBE TYPE 3 (1200)":
                     print("Attempting to place dimension for element: {0}".format(element.Id))
                     # Assuming you have a FamilyInstance element called 'family_instance' and a subcategory name 'MySubcategoryLine'
