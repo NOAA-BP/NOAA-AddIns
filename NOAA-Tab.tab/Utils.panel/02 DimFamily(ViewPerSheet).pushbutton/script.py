@@ -85,7 +85,7 @@ def get_dimension_line_from_sub_elements(family_instance, subcategory_name):
 
 
 # Function to place dimension in view
-def place_dimension(view, family_instance, reference_type, line):
+def place_dimension(view, family_instance, reference_type, line, dim_type):
     if line is None:
         print("No line found for dimensioning.")
         return None
@@ -102,6 +102,9 @@ def place_dimension(view, family_instance, reference_type, line):
                     ref_array.Append(ref)
             # Create dimension
             dimension = doc.Create.NewDimension(view, line, ref_array)
+            if dimension:
+                    # Set the dimension type
+                    dimension.DimensionType = dim_type
             t.Commit()
             return dimension
         except Exception as e:
@@ -158,11 +161,11 @@ def select_dimension_type(doc):
 # Main script
 sheets = select_sheets()
 print("Sheets slected:{}".format(sheets))
-selected_family_type = select_family_type()
-if selected_family_type:
-    print("Selected Family Type: {0}".format(selected_family_type.Family.Name))
-else:
-    print("No family type selected.")
+#selected_family_type = select_family_type()
+#if selected_family_type:
+#    print("Selected Family Type: {0}".format(selected_family_type.Family.Name))
+#else:
+#    print("No family type selected.")
 
 reference_type = FamilyInstanceReferenceType.StrongReference  # or another appropriate reference type
 referece_type_dim = FamilyInstanceReferenceType.WeakReference
@@ -200,16 +203,16 @@ for sheet in sheets:
             print("Collected elements in view:{}".format(collector))
             for element in collector:
                 print("Element being processed:{}, of type{}, under name {}".format(element.Id, type(element), element.Name), "Against selected family name:{}".format(selected_family_type.Family.Name))
-                if element.Name == "PV-WT-01" or element.Name == "72-WARDROBE TYPE 1 (1800)" or element.Name == "PV-WT-02" or element.Name == "72-WARDROBE TYPE 1 (1500)" or element.Name == "PV-WT-03" or element.Name == "72-WARDROBE TYPE 1 (1200)":
+                if element.Name == "PV-WT-01" or element.Name == "72-WARDROBE TYPE 1 (1800)" or element.Name == "PV-WT-02" or element.Name == "72-WARDROBE TYPE 2 (1500)" or element.Name == "PV-WT-03" or element.Name == "72-WARDROBE TYPE 3 (1200)":
                     print("Attempting to place dimension for element: {0}".format(element.Id))
                     # Assuming you have a FamilyInstance element called 'family_instance' and a subcategory name 'MySubcategoryLine'
                     line = get_dimension_line_from_sub_elements(element, '<Invisible lines>')
                     print("Collected line:{}".format(line))
                     if line:
-                        dimension = place_dimension(view, element, reference_type, line)
+                        dimension = place_dimension(view, element, reference_type, line, selected_dimension_type)
                         if dimension:
                             # Set the dimension type
-                            dimension.DimensionType = selected_family_type
+                            #dimension.DimensionType = selected_dimension_type
                             print("Dimension placed for family instance ID: {0}".format(element.Id))
                     else:
                          print("No line available for dimensioning.")
