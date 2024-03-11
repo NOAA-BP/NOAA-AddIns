@@ -33,7 +33,7 @@ rvt_year = int(app.VersionNumber)
 # Function to prompt user for sheet selection
 def select_sheets():
     # Prompt the user to select sheets
-    selected_sheets = forms.select_sheets(title='Select Sheets to Modify Title Block')
+    selected_sheets = forms.select_sheets(title='Select Original Sheets to Modify')
     # If user cancels selection, end script
     if not selected_sheets:
         forms.alert('No sheets selected. Exiting.', exitscript=True)
@@ -69,7 +69,7 @@ def prompt_for_tamplate():
 
 def prompt_for_starting_sheet_number():
     while True:
-        number = forms.ask_for_string("Enter starting sheet number (e.g., '35'):")
+        number = forms.ask_for_string("Enter starting sheet number, i.e. Series (e.g., '35'):")
         if number:
             return number
         #if number and '-' in number and number.split('-')[-1].strip().isdigit():
@@ -271,7 +271,7 @@ def pick_text_style(doc):
 
     # Ask the user to pick a text style from the list
     picked_style_name = forms.SelectFromList.show(text_styles_dict.keys(),
-                                                       message='Pick a text style:')
+                                                       message='Pick a text style for the Key Plan:')
 
     # Return the selected TextNoteType element
     if picked_style_name:
@@ -458,7 +458,7 @@ def duplicate_sheets_and_place_views(selected_sheets, title_block_id, start_numb
                                     print("INITIATE SECOND TRANSACTION FOR KEY_VIEW: To duplicate {0}".format(key_to_place.Name))
                                     t.Start()
                                     # Calculate the position for the current view
-                                    view_location = XYZ(728/304.8, ((initial_y_offset)*2)-10/304.8, 0)
+                                    view_location = XYZ(738/304.8, ((initial_y_offset)*2)-30/304.8, 0)
                                     try:
                                         key_to_place.ViewTemplateId = selected_template_key.Id
                                         copy_text_annotations(view.Id, key_to_place.Id, selected_text_style, doc)
