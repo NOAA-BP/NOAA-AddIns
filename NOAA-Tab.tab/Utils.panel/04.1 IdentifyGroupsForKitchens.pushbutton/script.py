@@ -91,7 +91,7 @@ def list_areas_by_apartment_number(doc, selected_name, selected_groups):
             for group_name in selected_groups:
                 for area in areas:
                     if area.GroupId != ElementId.InvalidElementId and doc.GetElement(area.GroupId).Name == group_name:
-                        target_parameter = area.LookupParameter("KITCHEN TYPE")
+                        target_parameter = area.LookupParameter("Kitchen Type")
                         if target_parameter and target_parameter.StorageType == StorageType.String:
                             print ("KITCHEN TYPE parameter identified for area:",area)
                             count += 1
